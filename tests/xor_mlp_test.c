@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mlpnet.h"
-#include "helpers.h"
+#include "../src/mlpnet.h"
+#include "../src/helpers.h"
 
 int main(){
 
