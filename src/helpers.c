@@ -10,7 +10,7 @@ double sigmoid(double x) {
 
 // Derivative of Sigmoid
 double sigmoid_derivative(double x) {
-    return sigmoid(x) * sigmoid(1.0 - x);
+    return x * (1.0 - x);
 }
 
 // ReLU activation function
@@ -27,9 +27,9 @@ double relu_derivative(double x) {
 double mean_square_error(double* x, double* y, int size){
     double loss = 0.0;
     for (int i = 0; i < size; i++){
-        loss += pow(x[i] - y[i], 2);
+        loss += pow(y[i] - x[i], 2);
     }
-    return loss / size; // Average loss
+    return loss / (size); // Average loss
 }
 
 double binary_cross_entropy(double x, double y, int size){
@@ -42,21 +42,21 @@ double binary_cross_entropy(double x, double y, int size){
     return loss;
 }
 
-// Function to initialize weights with small random values
-void init_weights(double* weights, int size, int start, double mult_tendancy, double add_tendancy) {
+// Function to initialize weights with psuedo-random value in range(0, 1) * mult_tendancy
+void init_weights(double* weights, int size, int start, double mult_tendancy) {
 
     time_t current_time;
     current_time = time(NULL);
 
     srand(((unsigned int)current_time) + ((unsigned int) start));
     for (int i = 0; i < size; i++) {
-        weights[i+start] = ((double) rand() / (RAND_MAX)) * mult_tendancy + add_tendancy; // Small random values
+        weights[i+start] = ((double) rand() / (RAND_MAX)) * mult_tendancy; // Small random values
     }
 }
 
-// Function to initialize biases to zero
-void init_biases(double* biases, int size, int start) {
+// Function to initialize biases to given val, usually zero
+void init_biases(double* biases, int size, int start, double val) {
     for (int i = 0; i < size; i++) {
-        biases[i+start] = 0.0;
+        biases[i+start] = val;
     }
 }

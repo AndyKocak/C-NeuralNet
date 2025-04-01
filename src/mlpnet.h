@@ -1,5 +1,5 @@
-#ifndef neural_h 
-#define neural_h 
+#ifndef mlpnet_h 
+#define mlpnet_h 
 
 // Struct definition of neural network a.k.a MLP (Multi Layer Perceptron)
 typedef struct
@@ -13,7 +13,6 @@ typedef struct
     double* activations;
     double* raw_activations;
     double* outputs;
-    double* raw_outputs;
 
     // Layer information
     char **activation_funcs;
@@ -23,15 +22,16 @@ typedef struct
     int total_neurons;
     int total_weights;
     int total_inputs;
+    double loss;
 } MLP;
 
-void init_net(MLP *net, double* inputs, int input_size);
+void init_mlp(MLP *net, int input_size);
 
-void add_forward_layer(MLP *(net), int units, char *activator,double w_mult_bias,double w_add_bias);
+void add_forward_layer(MLP *(net), int units, char *activator, double w_multiplier, double bias_val);
 
-void add_out_layer(MLP *net, int units, char *activator, double w_mult_bias, double w_add_bias);
+void feed_forward(MLP *net, double* inputs);
 
-void feed_forward(MLP *net, double* inputs, int input_len);
+void backprop(MLP (*net), double learning_rate, double* target, char *error_func);
 
 #endif
 

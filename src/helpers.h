@@ -13,8 +13,8 @@ double mean_square_error(double* x, double* y, int size);
 
 double binary_cross_entropy(double x, double y, int size);
 
-void init_weights(double* weights, int size, int start, double mult_tendancy, double add_tendancy);
+void init_weights(double* weights, int size, int start, double mult_tendancy);
 
-void init_biases(double* biases, int size, int start);
+void init_biases(double* biases, int size, int start, double val);
 
 #endif
