@@ -1,35 +1,59 @@
-# define some Makefile variables for the compiler and compiler flags
-# to use Makefile variables later in the Makefile: $()
-#
-#  -g    adds debugging information to the executable file
-#  -Wall turns on most, but not all, compiler warnings
-#
-# for C++ define  CC = g++
+# Directories
+SRC_DIR = src
+TEST_DIR = tests
+OBJ_DIR = obj
+BIN_DIR = bin
+
+# Shared sources
+COMMON_SRC = \
+	$(SRC_DIR)/mlpnet.c \
+	$(SRC_DIR)/helpers.c
+
+# Compiler and flags
 CC = gcc
-CFLAGS  = -g -Wall
+CFLAGS = -Wall -g -I$(SRC_DIR)
 
-# typing 'make' will invoke the first target entry in the file 
-# (in this case the default target entry)
-# you can name this target entry anything, but "default" or "all"
-# are the most commonly used names by convention
-#
-default: test
+# Binaries
+BINARIES = xor lotus
 
-test:	example1.o neural.o helpers.o
-	$(CC) $(CFLAGS) -o test example1.o neural.o helpers.o
+# Targets for building both
+all: $(BINARIES)
 
-example1.o:	example1.c neural.h helpers.h
-	$(CC) $(CFLAGS) -c example1.c
+# Create required directories
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)/$(SRC_DIR) $(OBJ_DIR)/$(TEST_DIR)
 
-neural.o:	neural.c neural.h helpers.h
-	$(CC) $(CFLAGS) -c neural.c
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
 
-helpers.o:	helpers.c helpers.h
-	$(CC) $(CFLAGS) -c helpers.c
+# ----- XOR TARGET -----
 
-# To start over from scratch, type 'make clean'.  This
-# removes the executable file, as well as old .o object
-# files and *~ backup files:
-#
-clean: 
-	$(RM) count *.o *~
+XOR_SRC = $(COMMON_SRC) $(TEST_DIR)/xor_mlp_test.c
+XOR_OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(XOR_SRC))
+
+xor: $(OBJ_DIR) $(BIN_DIR) $(BIN_DIR)/xor
+
+$(BIN_DIR)/xor: $(XOR_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(XOR_OBJ)
+
+# ----- LOTUS TARGET -----
+
+LOTUS_SRC = $(COMMON_SRC) $(TEST_DIR)/lotus_mlp_test.c
+LOTUS_OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(LOTUS_SRC))
+
+lotus: $(OBJ_DIR) $(BIN_DIR) $(BIN_DIR)/lotus
+
+$(BIN_DIR)/lotus: $(LOTUS_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(LOTUS_OBJ)
+
+# ----- Compilation Rule for All .c Files -----
+
+$(OBJ_DIR)/%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+# ----- Cleanup -----
+
+clean:
+	rm -rf $(OBJ_DIR) $(BIN_DIR)
+
+.PHONY: all xor lotus clean
