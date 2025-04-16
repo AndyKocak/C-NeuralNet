@@ -14,8 +14,11 @@ int main(){
 
     // Hyper Parameters
     int input_size = 2;
+    int out_size  = 1;
     double lr = 0.1;
     int epochs = 1000;
+    int batch_size = 4;
+    int threshold = 200;
 
     // Training Data
     double input_data[4][2] = {{1, 1}, {0, 1}, {1, 0}, {0, 0}};
@@ -30,28 +33,12 @@ int main(){
     add_forward_layer(&ANN, 2, "ReLU", 0.8, 0);
     add_forward_layer(&ANN, 1, "sigmoid", 1, 0);
 
+    // Example call for inputing data through network and using backpropogation
     feed_forward(&ANN, input_slit);
     backprop(&ANN, lr, output_slit, "MSE");
 
-
-    for(int epoch = 0; epoch < epochs; epoch++){
-        for (int i = 0; i < 4; i++) {
-            double input[2] = {input_data[i][0], input_data[i][1]};
-            double target[1] = {target_data[i][0]};
-
-            //printf("input: [%f, %f], target: %f", input[0], input[1], target[0]);
-
-            feed_forward(&ANN, input);
-
-            backprop(&ANN, lr, target, "MSE");
-
-            if (epoch % 200 == 0){
-                printf("input: [%f, %f], target: %f", input[0], input[1], target[0]);
-                printf(" loss: %f, output: %f \n", ANN.loss, ANN.outputs[0]);
-            }
-
-        }
-    }
+    // Use a 2D Array of double to train neural network
+    train_from_source(&ANN, input_size, out_size, lr, epochs, batch_size, input_data, target_data, threshold);
 
     return 0;
 }

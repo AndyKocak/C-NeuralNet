@@ -33,5 +33,7 @@ void feed_forward(MLP *net, double* inputs);
 
 void backprop(MLP (*net), double learning_rate, double* target, char *error_func);
 
+void train_from_source(MLP (*net), int input_size, int out_size, double lr, int epochs, int batch_size, double input_data[batch_size][input_size], double target_data[batch_size][out_size], int display_thresh);
+
 #endif
 

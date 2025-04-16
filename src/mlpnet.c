@@ -169,7 +169,7 @@ void feed_forward(MLP *net, double* inputs){
     }
 }
 
-// THIS ONE CAUSES PROBLEMS!!!
+// backpropagate through network to update weight/bias
 void backprop(MLP (*net), double learning_rate, double* target, char *error_func){
     double* weight_delta = (double*)malloc(((*net).total_weights + 1) * sizeof(double));
 
@@ -345,4 +345,61 @@ void backprop(MLP (*net), double learning_rate, double* target, char *error_func
 
     // free local arrays after completion
     free(weight_delta);
+}
+
+
+// Train directly from an array of double values
+void train_from_source(MLP (*net), int input_size, int out_size, double lr, int epochs, int batch_size, double input_data[batch_size][input_size], double target_data[batch_size][out_size], int display_thresh){
+    int threshold = display_thresh;
+    double* input = (double*)malloc(input_size * sizeof(double));
+    double* target = (double*)malloc(out_size * sizeof(double));
+    for(int epoch = 0; epoch < epochs; epoch++){
+        for (int i = 0; i < batch_size; i++) {
+            for (int j = 0; j < input_size; j++){
+                input[j] = input_data[i][j];
+            }
+
+            for (int j = 0; j < out_size; j++){
+                target[j] = target_data[i][j];
+            }
+
+            feed_forward(net, input);
+
+            backprop(net, lr, target, "MSE");
+
+            if ((epochs < 10)){
+                printf("input: [ ");
+                for (int j = 0; j < input_size; j++){
+                    printf("%f ", input[j]);
+                }
+                printf("], target: ");
+                for (int j = 0; j < out_size; j++){
+                    printf("%f ", target[j]);
+                }
+                printf(" loss: %f, output: ", (*net).loss);
+                for (int j = 0; j < out_size; j++){
+                    printf("%f ", (*net).outputs[j]);
+                }
+                printf("\n");
+            }
+            if (epoch % threshold == 0){
+                printf("epoch: %d ", epoch);
+                printf("input:[ ");
+                for (int j = 0; j < input_size; j++){
+                    printf("%f ", input[j]);
+                }
+                printf("],target: [ ");
+                for (int j = 0; j < out_size; j++){
+                    printf("%f ", target[j]);
+                }
+                printf("]loss: %f, output:[ ", (*net).loss);
+                for (int j = 0; j < out_size; j++){
+                    printf("%f ", (*net).outputs[j]);
+                }
+                printf("] \n");
+            }
+
+        }
+    }
+
 }

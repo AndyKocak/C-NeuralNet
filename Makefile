@@ -14,7 +14,7 @@ CC = gcc
 CFLAGS = -Wall -g -I$(SRC_DIR)
 
 # Binaries
-BINARIES = xor lotus
+BINARIES = xor iris
 
 # Targets for building both
 all: $(BINARIES)
@@ -36,15 +36,15 @@ xor: $(OBJ_DIR) $(BIN_DIR) $(BIN_DIR)/xor
 $(BIN_DIR)/xor: $(XOR_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(XOR_OBJ)
 
-# ----- LOTUS TARGET -----
+# ----- IRIS TARGET -----
 
-LOTUS_SRC = $(COMMON_SRC) $(TEST_DIR)/lotus_mlp_test.c
-LOTUS_OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(LOTUS_SRC))
+IRIS_SRC = $(COMMON_SRC) $(TEST_DIR)/iris_mlp_test.c
+IRIS_OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(IRIS_SRC))
 
-lotus: $(OBJ_DIR) $(BIN_DIR) $(BIN_DIR)/lotus
+IRIS: $(OBJ_DIR) $(BIN_DIR) $(BIN_DIR)/iris
 
-$(BIN_DIR)/lotus: $(LOTUS_OBJ)
-	$(CC) $(CFLAGS) -o $@ $(LOTUS_OBJ)
+$(BIN_DIR)/iris: $(IRIS_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(IRIS_OBJ)
 
 # ----- Compilation Rule for All .c Files -----
 
@@ -56,4 +56,4 @@ $(OBJ_DIR)/%.o: %.c
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
 
-.PHONY: all xor lotus clean
+.PHONY: all xor iris clean
