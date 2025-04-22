@@ -15,19 +15,22 @@ void init_mlp(MLP *net, int input_size){
     (*net).total_inputs = input_size;
 
     // Init array that stores how many neurons and weights in each layer
-    (*net).num_of_neurons = (int*)malloc(1 * sizeof(int));
-    (*net).num_of_weights = (int*)malloc(1 * sizeof(int));
-    
-    // Init all forward/backward pass variable arrays
-    (*net).weights = (double*)malloc(1 * sizeof(double));
-    (*net).biases = (double*)malloc(1 * sizeof(double));
-    (*net).activations = (double*)malloc(1 * sizeof(double));
-    (*net).raw_activations = (double*)malloc(1 * sizeof(double));
-    (*net).outputs = (double*)malloc(1 * sizeof(double));
+    (*net).max_layers = 8;
+    (*net).num_of_neurons = (int*)malloc(8 * sizeof(int));
+    (*net).num_of_weights = (int*)malloc(8 * sizeof(int));
 
     // Init string array that stores activation functions for each layer
-    (*net).activation_funcs = (char **)malloc(1 * sizeof(char *));
+    (*net).activation_funcs = (char **)malloc(8 * sizeof(char *));
+    
+    // Init all forward/backward pass variable arrays
+    (*net).max_weights = 1024;
+    (*net).weights = (double*)malloc(1024 * sizeof(double));
 
+    (*net).max_neurons = 128;
+    (*net).biases = (double*)malloc(128 * sizeof(double));
+    (*net).activations = (double*)malloc(128 * sizeof(double));
+    (*net).raw_activations = (double*)malloc(128 * sizeof(double));
+    (*net).outputs = (double*)malloc(128 * sizeof(double));
 }
 
 // add new forward pass layer to network 
@@ -39,30 +42,44 @@ void add_forward_layer(MLP *net, int units, char *activator, double w_multiplier
     // Change input_size depending on whether this is initial hidden layer or not.
     int input_size = ((*net).size == 0) ? (*net).total_inputs : (*net).num_of_neurons[((*net).size - 1)];
 
-    // Reallocate array that stores # of neurons in each layer
-    (*net).num_of_neurons = realloc((*net).num_of_neurons,(length+1) * sizeof(int));
+    // Reallocate arrays if layer count reaches prev. max
+    if ((length + 1) >= (*net).max_layers){
+        (*net).max_layers = (*net).max_layers * 2;
+        (*net).num_of_neurons = realloc((*net).num_of_neurons,((*net).max_layers) * sizeof(int));
+        (*net).activation_funcs = realloc((*net).activation_funcs, ((*net).max_layers) * sizeof(char *));
+        (*net).num_of_weights = realloc((*net).num_of_weights, ((*net).max_layers) * sizeof(int));
+    }
+
+    // Store # of neurons in each layer
     (*net).num_of_neurons[(length)] = units;
 
-    // Reallocate string array to add activator value
-    (*net).activation_funcs = realloc((*net).activation_funcs, (length+1) * sizeof(char *));
+    // Add to activator value array
     (*net).activation_funcs[(length)] = (char *)malloc(50 * sizeof(char));
     strcpy((*net).activation_funcs[(length)], activator);
 
     // Reallocate array that stores # weight for each layer
-    (*net).num_of_weights = realloc((*net).num_of_weights, (length+1) * sizeof(int));
     (*net).num_of_weights[(length)] = units * input_size;
 
-    // Reallocate weigth array and generate/assign random values using helper function
+    // Reallocate weigth array if more weights than max and generate/assign random values using helper function
     length = (*net).total_weights + (units * input_size);
-    (*net).weights = realloc((*net).weights,(length + 1) * sizeof(double));
+
+    if (length >= (*net).max_weights){
+        (*net).max_weights = (*net).max_weights * 2;
+        (*net).weights = realloc((*net).weights,((*net).max_weights) * sizeof(double));
+    }
+
     init_weights((*net).weights, (units * input_size), (*net).total_weights, w_multiplier);
 
     // Reallocate activations and biases arrays to store each neurons activation and bias values
     length = (*net).total_neurons + units;
-    (*net).activations = realloc((*net).activations, length * sizeof(double));
-    (*net).raw_activations = realloc((*net).activations, length * sizeof(double));
-    (*net).biases = realloc((*net).biases, length * sizeof(double));
 
+    if (length >= (*net).max_neurons){
+        (*net).max_neurons = (*net).max_neurons * 2;
+        (*net).activations = realloc((*net).activations, (*net).max_neurons * sizeof(double));
+        (*net).raw_activations = realloc((*net).activations, (*net).max_neurons * sizeof(double));
+        (*net).biases = realloc((*net).biases, (*net).max_neurons * sizeof(double));
+    }
+    
     // Call helper function to generate initial bias values
     init_biases((*net).biases, units, length, bias_val);
 
@@ -77,15 +94,13 @@ void add_forward_layer(MLP *net, int units, char *activator, double w_multiplier
 void feed_forward(MLP *net, double* inputs){
     
     // Change input array of MLP to new input arg
-    (*net).inputs = inputs;
+    for (int i = 0; i < (*net).total_inputs; i++) {
+        (*net).inputs[i] = inputs[i];
+    }
 
     // Reset trackers to properly traverse arrays
     int total_neurons = 0;
     int total_weights = 0;
-
-    // Init output array
-    int out_size = (*net).num_of_neurons[(*net).size - 1];
-    (*net).outputs = realloc((*net).outputs, out_size * sizeof(double));
 
     // Iterate through each layer starting from input layer
     for (int n = 0; n < (*net).size; n++){
@@ -116,10 +131,28 @@ void feed_forward(MLP *net, double* inputs){
                 }
                 if (strcmp(activator, "sigmoid") == 0){
                     (*net).activations[i] = sigmoid((*net).activations[(i)]);
-                }   
-                
-                // If only 1 layer exists in network add activations to outputs array
-                if (n == ((*net).size - 1)){
+                }  
+            }
+
+            // For activations that require a vector input, apply them when all neurons have activation
+            if (strcmp(activator, "softmax") == 0) {
+                double* cur = (double*)malloc(units * sizeof(double));
+                for (int i = 0; i < units; i++) {
+                    cur[i] = (*net).activations[i];
+                }
+            
+                double* temp = softmax(cur, units);
+            
+                for (int i = 0; i < units; i++) {
+                    (*net).activations[i] = temp[i];
+                }
+                free(temp);
+                free(cur);
+            }
+
+            // If only 1 layer exists in network add activations to outputs array
+            if (n == ((*net).size - 1)){
+                for (int i = 0; i < units; i++){
                     (*net).outputs[i] = (*net).activations[i];
                 }
             }
@@ -138,7 +171,7 @@ void feed_forward(MLP *net, double* inputs){
                 // Reinit activation values
                 (*net).raw_activations[cur_activation_index] = 0;
                 for(int j = 0; j < input_size; j++){
-                    (*net).raw_activations[cur_activation_index] += (*net).raw_activations[j + prev_activation_start] * (*net).weights[j + cur_weight_row_index];
+                    (*net).raw_activations[cur_activation_index] += (*net).activations[j + prev_activation_start] * (*net).weights[j + cur_weight_row_index];
                 }
 
                 (*net).activations[(cur_activation_index)] = (*net).raw_activations[cur_activation_index];
@@ -153,12 +186,31 @@ void feed_forward(MLP *net, double* inputs){
                 if (strcmp(activator, "sigmoid") == 0){
                     (*net).activations[cur_activation_index] = sigmoid((*net).activations[cur_activation_index]);
                 }
+            }
 
-                // If on output layer add activations to outputs array
-                if (n == ((*net).size - 1)){
+            // For activations that require a vector input, apply them when all neurons have activation
+            if (strcmp(activator, "softmax") == 0) {
+                double* cur = (double*)malloc(units * sizeof(double));
+                for (int i = 0; i < units; i++) {
+                    cur[i] = (*net).activations[total_neurons + i];
+                }
+            
+                double* temp = softmax(cur, units);
+                free(cur);
+                for (int i = 0; i < units; i++) {
+                    (*net).activations[total_neurons + i] = temp[i];
+                }
+                free(temp);
+            }
+
+            // If on output layer add activations to outputs array
+            if (n == ((*net).size - 1)){
+                for (int i = 0; i < units; i++){
+                    int cur_activation_index = i + total_neurons;
                     (*net).outputs[i] = (*net).activations[cur_activation_index];
                 }
             }
+
         }
 
         // Update total navigated neuron tracker
@@ -213,6 +265,10 @@ void backprop(MLP (*net), double learning_rate, double* target, char *error_func
                     error = binary_cross_entropy((*net).outputs[i], target[i], (*net).num_of_neurons[cur_size - 1]);
                     (*net).loss = error;
                 }
+                else if (strcmp(error_func, "CCE") == 0){
+                    error = cross_entropy_loss((*net).outputs, target, (*net).num_of_neurons[cur_size - 1]);
+                    (*net).loss = error;
+                }
 
                 double dRaw = 0.0;
                 if (strcmp(activator, "ReLU") == 0){
@@ -221,9 +277,13 @@ void backprop(MLP (*net), double learning_rate, double* target, char *error_func
                 if (strcmp(activator, "sigmoid") == 0){
                     dRaw = sigmoid_derivative((*net).activations[a_start + i]);
                 }
+                if (strcmp(activator, "softmax") == 0){
+                    dRaw = 1.0;
+                }
 
                 // For the purposes of this framework I will be using (z - y) as loss term for output layer
                 cur_delta = ((*net).outputs[i] - target[i]);
+                //printf("cur_delta%d = %f", i, cur_delta);
 
                 // Update weights connecting to neuron using gradient descent. 
                 for(int j = 0; j < w_per_n; j++){
@@ -349,24 +409,54 @@ void backprop(MLP (*net), double learning_rate, double* target, char *error_func
 
 
 // Train directly from an array of double values
-void train_from_source(MLP (*net), int input_size, int out_size, double lr, int epochs, int batch_size, double input_data[batch_size][input_size], double target_data[batch_size][out_size], int display_thresh){
+void train_from_source(MLP (*net), int input_size, int out_size, double lr, int epochs, int batch_size, int n_train, double input_data[batch_size][input_size], double target_data[batch_size][out_size], int display_thresh, char *error_func){
+    // Threshold val at which training progress will be displayed
     int threshold = display_thresh;
+
+    // Initialize arrays for individual inputs/target values
     double* input = (double*)malloc(input_size * sizeof(double));
     double* target = (double*)malloc(out_size * sizeof(double));
+
+    // Array to store shuffled indices
+    int* indices = (int*)malloc(n_train * sizeof(int));
+    for (int i = 0; i < n_train; i++) {
+        indices[i] = i;
+    }
+
+    // Variables for tracking average loss
+    double epoch_loss_sum = 0.0;
+    int loss_count = 0;
+
+    // Loop through toal n of epochs for each batch of train input
     for(int epoch = 0; epoch < epochs; epoch++){
+
+        shuffle_array(indices, n_train);
+
+        // Reset loss tracking for each epoch
+        epoch_loss_sum = 0.0;
+        loss_count = 0;
+
         for (int i = 0; i < batch_size; i++) {
+
+            int idx = (batch_size < n_train) ? indices[i] : i;
+            // Fill in values for input and target arrays
             for (int j = 0; j < input_size; j++){
-                input[j] = input_data[i][j];
+                input[j] = input_data[idx][j];
             }
 
             for (int j = 0; j < out_size; j++){
-                target[j] = target_data[i][j];
+                target[j] = target_data[idx][j];
             }
 
+            // Feed the data through network, then backpropogate to update weights/biases accordingly
             feed_forward(net, input);
+            backprop(net, lr, target, error_func);
 
-            backprop(net, lr, target, "MSE");
+            // Accumulate loss for this batch
+            epoch_loss_sum += (*net).loss;
+            loss_count++;
 
+            // If a small number of epochs present don't use threshold
             if ((epochs < 10)){
                 printf("input: [ ");
                 for (int j = 0; j < input_size; j++){
@@ -382,7 +472,9 @@ void train_from_source(MLP (*net), int input_size, int out_size, double lr, int 
                 }
                 printf("\n");
             }
-            if (epoch % threshold == 0){
+
+            // At given threshold print features/loss/output to view model performance during training 
+            else if (epoch % threshold == 0){
                 printf("epoch: %d ", epoch);
                 printf("input:[ ");
                 for (int j = 0; j < input_size; j++){
@@ -400,6 +492,65 @@ void train_from_source(MLP (*net), int input_size, int out_size, double lr, int 
             }
 
         }
+
+        // Calculate average loss for the epoch
+        double avg_loss = epoch_loss_sum / loss_count;
+
+        // At given threshold print features/loss/output to view model performance during training 
+        if (epoch % threshold == 0) {
+            printf("epoch: %d ", epoch);
+            printf("avg_loss: %f ", avg_loss);
+            printf("input:[ ");
+            for (int j = 0; j < input_size; j++) {
+                printf("%f ", input[j]);
+            }
+            printf("],target: [ ");
+            for (int j = 0; j < out_size; j++) {
+                printf("%f ", target[j]);
+            }
+            printf("] output:[ ");
+            for (int j = 0; j < out_size; j++) {
+                printf("%f ", (*net).outputs[j]);
+            }
+            printf("] \n");
+        }
+        
     }
 
+    //Free local arrays
+    free(input);
+    free(target);
+    free(indices);
+}
+
+
+// Function to free memory alloccated by the MLP
+void free_mlp(MLP *net) {
+    if (!net) return;
+
+    free(net->inputs);
+    free(net->weights);
+    free(net->biases);
+    free(net->activations);
+    free(net->raw_activations);
+    free(net->outputs);
+    free(net->num_of_neurons);
+    free(net->num_of_weights);
+
+    // Free each activation function string
+    for (int i = 0; i < net->size; i++) {
+        free(net->activation_funcs[i]);
+    }
+    free(net->activation_funcs);
+
+    // Reset pointers to NULL just in case
+    net->inputs = NULL;
+    net->weights = NULL;
+    net->biases = NULL;
+    net->activations = NULL;
+    net->raw_activations = NULL;
+    net->outputs = NULL;
+    net->num_of_neurons = NULL;
+    net->num_of_weights = NULL;
+    net->activation_funcs = NULL;
 }

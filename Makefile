@@ -41,7 +41,7 @@ $(BIN_DIR)/xor: $(XOR_OBJ)
 IRIS_SRC = $(COMMON_SRC) $(TEST_DIR)/iris_mlp_test.c
 IRIS_OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(IRIS_SRC))
 
-IRIS: $(OBJ_DIR) $(BIN_DIR) $(BIN_DIR)/iris
+iris: $(OBJ_DIR) $(BIN_DIR) $(BIN_DIR)/iris
 
 $(BIN_DIR)/iris: $(IRIS_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(IRIS_OBJ)

@@ -5,8 +5,6 @@
 #include "../src/helpers.h"
 
 int main(){
-
-    printf("Hello, World!\n");
     
     MLP ANN;
 
@@ -19,6 +17,7 @@ int main(){
     int epochs = 1000;
     int batch_size = 4;
     int threshold = 200;
+    int n_train = 4;
 
     // Training Data
     double input_data[4][2] = {{1, 1}, {0, 1}, {1, 0}, {0, 0}};
@@ -38,7 +37,7 @@ int main(){
     backprop(&ANN, lr, output_slit, "MSE");
 
     // Use a 2D Array of double to train neural network
-    train_from_source(&ANN, input_size, out_size, lr, epochs, batch_size, input_data, target_data, threshold);
+    train_from_source(&ANN, input_size, out_size, lr, epochs, batch_size, n_train, input_data, target_data, threshold, "MSE");
 
     return 0;
 }
