@@ -6,7 +6,7 @@ feedforward ANN's such as backpropogation, gradient descent, and data fitting to
 it's a C implementation of some popular high-level machine learning libraries most are accustomed to such as 
 scikit-learn, Keras, and Pytorch. It's a great way to both understand how a Neural Network works under the hood
 as well as build performant solutions for classic machine learning problems as demonstrated in some of the 
-examples I've provided under tets.
+examples I've provided under tests.
 
 ## Features
 * __Customizable Architecture__: You can define the number of layers, the number of neurons per layer, the activation function for the layer, an initial offset for bias in layer, and more.
