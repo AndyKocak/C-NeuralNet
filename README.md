@@ -53,10 +53,12 @@ For most smaller applications like handling the Iris dataset or xor, the initial
 add_forward_layer(&ANN, 2, "ReLU", 0.8, 0);
 add_forward_layer(&ANN, 1, "sigmoid", 1, 0);
 ```
-The code above is the example layout I used for my neural network in the xor problem. It first creates a hidden layer of 2 neurons with activation function ReLU, and adjusts weight distribution so the initial values of the weights are 4/5'th of what they'd normally be. Additionally I also make another layer of single neuron with sigmoid activation and all scaling of bias and weight set to their normal quantities. It's important to note that the model will automatically assume the first added layer comes right after the input layer, and the last added layer is the output layer. To further understand how it works we need to look at the parameters the function accepts.
-``` void add_forward_layer(MLP *net, int units, char *activator, double w_multiplier, double bias_val) ```
+The code above is the example layout I used for my neural network in the xor problem. It first creates a hidden layer of 2 neurons with activation function ReLU, and adjusts weight distribution so the initial values of the weights are 4/5'th of what they'd normally be. Additionally I also make another layer of single neuron with sigmoid activation and all scaling of bias and weight set to their normal quantities. It's important to note that the model will automatically assume the first added layer comes right after the input layer, and the last added layer is the output layer. To further understand how it works we need to look at the parameters the function accepts.  
+
+``` void add_forward_layer(MLP *net, int units, char *activator, double w_multiplier, double bias_val) ```  
+
 Where the args must have the following values:
-* ``MLP (/*net)`` = pointer adress to your model
+* ``MLP (*net)`` = pointer adress to your model
 * ``int units`` = number of neurons the layer will have
 * ``char *activator`` = activation function you want to use in string format for the given layer (can currently handle sigmoid, ReLU, tanh, and softmax)
 * ``double w_multiplier`` = adjusts the init range of weights from -1, 1 to -w_multiplier, w_multipler 
@@ -84,7 +86,7 @@ Again this is another code snippet from the xor example. Here we are defining so
 train_from_source(MLP (*net), int input_size, int out_size, double lr, int epochs, int batch_size, int n_train, double input_data[batch_size][input_size], double target_data[batch_size][out_size], int display_thresh, char *error_func)
 ```
 Where the args must have the following values:
-* ``MLP (/*net)`` = pointer adress to your model
+* ``MLP (*net)`` = pointer adress to your model
 * ``int input_size`` = the size of your input layer
 * ``int out_size`` = size of your output layer
 * ``double lr`` = learning rate aookued to gradient
