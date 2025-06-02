@@ -27,8 +27,16 @@ def convert_to_raw(input_dir, output_dir, size=(48, 48)):
 #convert_to_raw("test/sad", "test/sad_raw")
 #convert_to_raw("test/surprised", "test/surprised_raw")
 
+#convert_to_raw("train/angry", "train/angry_raw")
+#convert_to_raw("train/disgusted", "train/disgusted_raw")
+#convert_to_raw("train/fearful", "train/fearful_raw")
+#convert_to_raw("train/happy", "train/happy_raw")
+#convert_to_raw("train/neutral", "train/neutral_raw")
+#convert_to_raw("train/sad", "train/sad_raw")
+#convert_to_raw("train/surprised", "train/surprised_raw")
+
 # Example loading from a file
-with open("test/sad_raw/im0.raw", "rb") as f:
+"""with open("test/sad_raw/im0.raw", "rb") as f:
    raw_data = f.read()
    img = Image.frombytes('L', (48, 48), raw_data)
-   img.show()
+   img.show()"""
