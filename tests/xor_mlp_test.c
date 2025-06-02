@@ -39,5 +39,7 @@ int main(){
     // Use a 2D Array of double to train neural network
     train_from_source(&ANN, input_size, out_size, lr, epochs, batch_size, n_train, input_data, target_data, threshold, "MSE");
 
+    free_mlp(&ANN);
+
     return 0;
 }
